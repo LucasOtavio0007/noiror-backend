@@ -29,6 +29,7 @@ import freteRoutes from './routes/frete.js'
 import cupomRoutes from './routes/cupom.js'
 
 const app = express()
+app.set('trust proxy', 1)
 await conectar()
 
 // Segurança
