@@ -20,5 +20,6 @@ router.delete('/sessions/:id', revokeSession)
 router.get('/', adminOnly, listUsers)
 router.patch('/:id/role', adminOnly, updateRole)
 router.delete('/:id', adminOnly, deleteUser)
+router.get('/log', (req, res) => res.json({ ok: true }))
 
 export default router
