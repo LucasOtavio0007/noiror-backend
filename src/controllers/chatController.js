@@ -1,8 +1,8 @@
-import Anthropic from '@anthropic-ai/sdk'
+import Groq from 'groq-sdk'
 import Produto from '../models/Produto.js'
 
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
+const groq = new Groq({
+  apiKey: process.env.GROQ_API_KEY,
 })
 
 export const enviarMensagemIA = async (req, res) => {
@@ -13,8 +13,8 @@ export const enviarMensagemIA = async (req, res) => {
       return res.status(400).json({ ok: false, msg: 'Mensagem vazia.' })
     }
 
-    if (!process.env.ANTHROPIC_API_KEY) {
-      console.error('ANTHROPIC_API_KEY não definida.')
+    if (!process.env.GROQ_API_KEY) {
+      console.error('GROQ_API_KEY não definida.')
       return res.status(500).json({ ok: false, msg: 'Serviço de IA não configurado.' })
     }
 
@@ -59,42 +59,40 @@ INSTRUÇÕES:
 - Nunca invente preços ou produtos que não estão na lista acima
 - Sempre termine oferecendo mais ajuda`
 
-    // Monta histórico: filtra apenas mensagens válidas do histórico anterior
-    // (exclui a mensagem atual pois ela vem separada no campo 'mensagem')
+    // Monta histórico filtrando apenas mensagens válidas
     const mensagensAnteriores = Array.isArray(historico)
       ? historico
           .filter(m => m.role && m.content && typeof m.content === 'string')
           .filter(m => ['user', 'assistant'].includes(m.role))
-          .slice(-10) // últimas 10 mensagens
+          .slice(-10)
       : []
 
-    // Garante que não termina com mensagem do assistente (Anthropic exige alternar)
+    // Garante alternância de roles (Groq também exige)
     const mensagensLimpas = []
     for (const m of mensagensAnteriores) {
       const ultimo = mensagensLimpas[mensagensLimpas.length - 1]
-      if (ultimo && ultimo.role === m.role) continue // pula duplicatas do mesmo role
+      if (ultimo && ultimo.role === m.role) continue
       mensagensLimpas.push({ role: m.role, content: m.content })
     }
 
-    // Remove a última mensagem se for do usuário (pois vamos adicionar a mensagem atual)
+    // Remove última se for user (vamos adicionar a mensagem atual)
     if (mensagensLimpas.length && mensagensLimpas[mensagensLimpas.length - 1].role === 'user') {
       mensagensLimpas.pop()
     }
 
-    // Adiciona a mensagem atual do usuário
     const messages = [
+      { role: 'system', content: systemPrompt },
       ...mensagensLimpas,
       { role: 'user', content: mensagem.trim() },
     ]
 
-    const resposta = await anthropic.messages.create({
-      model: 'claude-haiku-4-5-20251001',
+    const resposta = await groq.chat.completions.create({
+      model: 'llama-3.1-8b-instant',
       max_tokens: 600,
-      system: systemPrompt,
       messages,
     })
 
-    const textoResposta = resposta.content?.[0]?.text?.trim()
+    const textoResposta = resposta.choices?.[0]?.message?.content?.trim()
       || 'Desculpe, não consegui processar sua pergunta. Tente novamente ou entre em contato pelo WhatsApp.'
 
     return res.json({ ok: true, resposta: textoResposta })
@@ -102,7 +100,6 @@ INSTRUÇÕES:
   } catch (error) {
     console.error('Erro na IA:', error?.status, error?.message || error)
 
-    // Erros específicos da Anthropic
     if (error?.status === 401) {
       return res.status(500).json({ ok: false, msg: 'Chave de API inválida.' })
     }
