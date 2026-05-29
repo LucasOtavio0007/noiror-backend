@@ -60,7 +60,11 @@ app.use('/api/auth/register', limiterAuth)
 
 // CORS
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+  origin: [
+    'http://localhost:5173',
+    'https://curious-semolina-8a50c0.netlify.app',
+    'https://tecnologia-xi.vercel.app',
+  ],
   credentials: true,
 }))
 
