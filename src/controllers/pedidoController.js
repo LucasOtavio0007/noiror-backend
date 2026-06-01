@@ -19,19 +19,32 @@ const extrairContato = (pedido) => ({
 // ═══════════════════════════════════════════════════════════
 export const criarPedido = async (req, res) => {
   try {
-    const { itens, total, pagamento, cliente, entrega } = req.body
+    const { itens, total, pagamento, cliente, entrega, freteValor, cupom } = req.body
 
     if (!itens?.length)  return res.status(400).json({ erro: 'Nenhum item no pedido.' })
     if (total === undefined) return res.status(400).json({ erro: 'Total obrigatório.' })
 
-    const pedido = await Pedido.create({
-      usuario: req.userId || null,
-      itens,
-      total,
-      pagamento: pagamento || { metodo: 'cartao', status: 'pendente' },
-      cliente:   cliente   || {},
-      entrega:   entrega   || {},
-    })
+    const itensSalvos = (itens || []).map(i => ({
+  produto:  i.produto  || i._id || i.id,
+  nome:     i.nome     || '',
+  preco:    i.preco    || 0,
+  qty:      i.qty      || 1,
+  imagem:   i.imagem   || '',
+  corNome:  i.corNome  || '',
+  corHex:   i.corHex   || '',
+  storage:  i.storage  || '',
+}))
+
+const pedido = await Pedido.create({
+  usuario:    req.userId || null,
+  itens:      itensSalvos,
+  total,
+  freteValor: freteValor || 0,
+  cupom:      cupom      || '',
+  pagamento:  pagamento  || { metodo: 'cartao', status: 'pendente' },
+  cliente:    cliente    || {},
+  entrega:    entrega    || {},
+})
 
     return res.status(201).json(pedido)
   } catch (err) {
