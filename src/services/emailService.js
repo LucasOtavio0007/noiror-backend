@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════════════════════
-//  NOIR & OR — EMAIL SERVICE
+//  NOIR & OR — EMAIL SERVICE  (versão unificada)
 //  Powered by Resend  ·  npm install resend
-//  Coloque no .env:  RESEND_API_KEY=re_...
+//  .env:  RESEND_API_KEY · EMAIL_DOMAIN · SITE_URL
 // ═══════════════════════════════════════════════════════════
 import { Resend } from 'resend'
 
@@ -11,11 +11,9 @@ const FROM   = `Noir & Or <noreply@${process.env.EMAIL_DOMAIN || 'noiror.com.br'
 const REPLY  = `contato@${process.env.EMAIL_DOMAIN || 'noiror.com.br'}`
 const SITE   = process.env.SITE_URL || 'https://noiror.com.br'
 
-// ── Design tokens ────────────────────────────────────────────
+// ── Design tokens ─────────────────────────────────────────
 const GOLD    = '#C8A84B'
-const GOLD2   = '#F5D78E'
 const GOLD_03 = 'rgba(200,168,75,0.05)'
-const GOLD_08 = 'rgba(200,168,75,0.10)'
 const HAIR    = 'rgba(200,168,75,0.15)'
 const SILK    = 'rgba(237,232,224,0.92)'
 const SILK2   = 'rgba(237,232,224,0.60)'
@@ -23,17 +21,19 @@ const SILK3   = 'rgba(237,232,224,0.30)'
 const VOID    = '#030303'
 const DEEP    = '#0a0a0a'
 
-// ── Estilos inline reutilizáveis ──────────────────────────────
-const P      = `margin:0 0 14px;font-size:13px;font-weight:300;color:${SILK2};line-height:1.9;letter-spacing:.02em;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif`
-const P_SM   = `margin:0 0 10px;font-size:11px;font-weight:300;color:${SILK3};line-height:1.8;letter-spacing:.02em;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif`
-const TD_IMG = `padding:12px 10px 12px 14px;vertical-align:middle;width:72px`
-const TD_NFO = `padding:12px 10px;vertical-align:middle`
-const TD_PRC = `padding:12px 14px;vertical-align:middle;text-align:right;font-family:monospace;font-size:12px;color:${GOLD};white-space:nowrap`
+// ── Estilos inline reutilizáveis ──────────────────────────
+const P    = `margin:0 0 14px;font-size:13px;font-weight:300;color:${SILK2};line-height:1.9;letter-spacing:.02em;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif`
+const P_SM = `margin:0 0 10px;font-size:11px;font-weight:300;color:${SILK3};line-height:1.8;letter-spacing:.02em;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif`
 
-// ── Formatador de preço ───────────────────────────────────────
+// ── Utilitários ───────────────────────────────────────────
 const fmt = (v) => (v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })
 
-// ── Utilitário de envio ───────────────────────────────────────
+const dataFormatada = (d) =>
+  new Date(d || Date.now()).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })
+
+const primeiroNome = (nome) => (nome || 'Cliente').split(' ')[0]
+
+// ── Utilitário de envio ───────────────────────────────────
 async function enviar({ to, subject, html, tag }) {
   try {
     const { data, error } = await resend.emails.send({
@@ -53,7 +53,7 @@ async function enviar({ to, subject, html, tag }) {
   }
 }
 
-// ── Timeline step helper ──────────────────────────────────────
+// ── Timeline step ─────────────────────────────────────────
 function step({ feito, ativo, label, sub }) {
   const gem = feito ? '◆' : ativo ? '◈' : '◇'
   const cor  = feito ? GOLD : ativo ? SILK : SILK3
@@ -68,30 +68,27 @@ function step({ feito, ativo, label, sub }) {
 }
 
 // ═══════════════════════════════════════════════════════════
-//  TEMPLATE BASE — Estética Noir & Or
+//  TEMPLATE BASE
 // ═══════════════════════════════════════════════════════════
 function templateBase({ kanji, titulo, subtitulo, corpo, cta, rodape, feats, alerta }) {
   return `<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-  <meta name="color-scheme" content="dark"/>
-  <title>Noir &amp; Or</title>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<meta name="color-scheme" content="dark"/>
+<title>Noir &amp; Or</title>
 </head>
 <body style="margin:0;padding:0;background:${VOID};-webkit-font-smoothing:antialiased">
 
-  <!-- Preheader invisível -->
-  <div style="display:none;max-height:0;overflow:hidden;mso-hide:all">${subtitulo} · Noir &amp; Or ◆&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;</div>
+  <div style="display:none;max-height:0;overflow:hidden;mso-hide:all">${subtitulo} · Noir &amp; Or ◆&zwnj;&nbsp;&zwnj;&nbsp;</div>
 
   <table width="100%" cellpadding="0" cellspacing="0" style="background:${VOID};min-height:100vh">
     <tr><td align="center" style="padding:40px 16px">
       <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%">
 
         <!-- Linha dourada superior -->
-        <tr>
-          <td height="1" style="background:linear-gradient(90deg,transparent,${GOLD},transparent);font-size:0;line-height:0">&nbsp;</td>
-        </tr>
+        <tr><td height="1" style="background:linear-gradient(90deg,transparent,${GOLD},transparent);font-size:0;line-height:0">&nbsp;</td></tr>
 
         <!-- Header -->
         <tr>
@@ -112,13 +109,11 @@ function templateBase({ kanji, titulo, subtitulo, corpo, cta, rodape, feats, ale
           </td>
         </tr>
 
-        <!-- Separador ornamental -->
+        <!-- Separador -->
         <tr>
           <td style="background:${DEEP};padding:0 44px;border-left:0.5px solid ${HAIR};border-right:0.5px solid ${HAIR}">
             <table width="100%" cellpadding="0" cellspacing="0">
-              <tr>
-                <td style="height:0.5px;background:linear-gradient(90deg,transparent,${HAIR},transparent);font-size:0">&nbsp;</td>
-              </tr>
+              <tr><td style="height:0.5px;background:linear-gradient(90deg,transparent,${HAIR},transparent);font-size:0">&nbsp;</td></tr>
             </table>
           </td>
         </tr>
@@ -126,13 +121,8 @@ function templateBase({ kanji, titulo, subtitulo, corpo, cta, rodape, feats, ale
         <!-- Hero -->
         <tr>
           <td style="background:${DEEP};padding:36px 44px 32px;border-left:0.5px solid ${HAIR};border-right:0.5px solid ${HAIR}">
-            <!-- Linha decorativa -->
             <div style="width:36px;height:1.5px;background:linear-gradient(90deg,${GOLD},transparent);margin:0 0 22px;opacity:.7"></div>
-
-            <!-- Título -->
             <h1 style="margin:0 0 8px;font-size:28px;font-weight:300;font-style:italic;color:${SILK};line-height:1.2;font-family:Georgia,'Times New Roman',serif;letter-spacing:-.01em">${titulo}</h1>
-
-            <!-- Subtítulo -->
             <p style="margin:0 0 26px;font-size:8px;letter-spacing:.55em;text-transform:uppercase;color:${GOLD};opacity:.7;font-family:'Helvetica Neue',sans-serif">${subtitulo}</p>
 
             <!-- Divisor ◆ -->
@@ -144,10 +134,8 @@ function templateBase({ kanji, titulo, subtitulo, corpo, cta, rodape, feats, ale
               </tr>
             </table>
 
-            <!-- Corpo -->
             ${corpo}
 
-            <!-- Benefícios (se houver) -->
             ${feats ? `
             <div style="border:0.5px solid ${HAIR};padding:20px 22px;margin:24px 0 0;background:${GOLD_03}">
               ${feats.map(f => `
@@ -157,11 +145,9 @@ function templateBase({ kanji, titulo, subtitulo, corpo, cta, rodape, feats, ale
               </div>`).join('')}
             </div>` : ''}
 
-            <!-- CTA -->
             ${cta ? `
             <div style="margin:30px 0 0;text-align:center">
-              <a href="${cta.url}"
-                style="display:inline-block;padding:15px 44px;background:transparent;border:0.5px solid ${GOLD};font-size:8px;font-weight:400;letter-spacing:.6em;text-transform:uppercase;color:${GOLD};text-decoration:none;font-family:'Helvetica Neue',sans-serif">
+              <a href="${cta.url}" style="display:inline-block;padding:15px 44px;background:transparent;border:0.5px solid ${GOLD};font-size:8px;font-weight:400;letter-spacing:.6em;text-transform:uppercase;color:${GOLD};text-decoration:none;font-family:'Helvetica Neue',sans-serif">
                 ${cta.label} &nbsp;→
               </a>
               <p style="margin:12px 0 0;font-size:9px;color:${SILK3};word-break:break-all;font-family:'Helvetica Neue',sans-serif">
@@ -169,7 +155,6 @@ function templateBase({ kanji, titulo, subtitulo, corpo, cta, rodape, feats, ale
               </p>
             </div>` : ''}
 
-            <!-- Alerta segurança -->
             ${alerta ? `
             <div style="margin:26px 0 0;padding:14px 18px;border:0.5px solid rgba(239,68,68,.25);border-left:2px solid rgba(239,68,68,.6);background:rgba(239,68,68,.04)">
               <p style="margin:0;font-size:10px;letter-spacing:.05em;color:rgba(239,68,68,.75);line-height:1.7;font-family:'Helvetica Neue',sans-serif">
@@ -187,7 +172,8 @@ function templateBase({ kanji, titulo, subtitulo, corpo, cta, rodape, feats, ale
               <span style="font-size:7px;color:${GOLD};opacity:.25;letter-spacing:.9em">◆ &nbsp; ◇ &nbsp; ◆</span>
             </div>
             <p style="margin:0 0 8px;font-size:11px;color:${SILK3};line-height:1.7;text-align:center;font-family:'Helvetica Neue',sans-serif">${rodape}</p>
-            <p style="margin:14px 0 0;font-size:8px;letter-spacing:.22em;text-transform:uppercase;color:rgba(237,232,224,.12);text-align:center;font-family:'Helvetica Neue',sans-serif">
+            <p style="margin:4px 0 0;font-size:8px;color:rgba(237,232,224,.12);text-align:center;font-family:'Helvetica Neue',sans-serif">Sabará, MG · Brasil</p>
+            <p style="margin:10px 0 0;font-size:8px;letter-spacing:.22em;text-transform:uppercase;color:rgba(237,232,224,.12);text-align:center;font-family:'Helvetica Neue',sans-serif">
               © ${new Date().getFullYear()} Noir &amp; Or · Todos os direitos reservados
             </p>
             <p style="margin:8px 0 0;font-size:8px;letter-spacing:.14em;color:rgba(237,232,224,.09);text-align:center;font-family:'Helvetica Neue',sans-serif">
@@ -199,9 +185,7 @@ function templateBase({ kanji, titulo, subtitulo, corpo, cta, rodape, feats, ale
         </tr>
 
         <!-- Linha dourada inferior -->
-        <tr>
-          <td height="1" style="background:linear-gradient(90deg,transparent,rgba(200,168,75,.3),transparent);font-size:0;line-height:0">&nbsp;</td>
-        </tr>
+        <tr><td height="1" style="background:linear-gradient(90deg,transparent,rgba(200,168,75,.3),transparent);font-size:0;line-height:0">&nbsp;</td></tr>
 
       </table>
     </td></tr>
@@ -212,22 +196,22 @@ function templateBase({ kanji, titulo, subtitulo, corpo, cta, rodape, feats, ale
 
 // ═══════════════════════════════════════════════════════════
 //  1. CONFIRMAÇÃO DE CADASTRO
+//  { nome, email, tokenUrl }
 // ═══════════════════════════════════════════════════════════
 export async function enviarConfirmacaoCadastro({ nome, email, tokenUrl }) {
-  const primeiroNome = nome.split(' ')[0]
   return enviar({
     to:      email,
     subject: 'Noir & Or · Confirme seu acesso ao atelier',
     tag:     'confirmacao-cadastro',
     html: templateBase({
       kanji:    '入',
-      titulo:   `Bem-vindo ao atelier,<br/><em>${primeiroNome}</em>`,
+      titulo:   `Bem-vindo ao atelier,<br/><em>${primeiroNome(nome)}</em>`,
       subtitulo:'Confirme seu e-mail para ativar o acesso',
       corpo: `
         <p style="${P}">Você acaba de ingressar em um círculo seleto de apreciadores de tecnologia de alto padrão. Para ativar sua conta e acessar todos os benefícios VIP, confirme seu endereço de e-mail abaixo.</p>
         <p style="${P_SM}">Este link expira em <strong style="color:${GOLD}">24 horas</strong> e pode ser usado apenas uma vez.</p>
       `,
-      cta: { label: 'Confirmar minha conta', url: tokenUrl },
+      cta:   { label: 'Confirmar minha conta', url: tokenUrl },
       feats: [
         'Acesso a lançamentos exclusivos 48h antes',
         'Frete VIP sempre gratuito',
@@ -239,29 +223,70 @@ export async function enviarConfirmacaoCadastro({ nome, email, tokenUrl }) {
 }
 
 // ═══════════════════════════════════════════════════════════
-//  2. CONFIRMAÇÃO DE COMPRA
+//  2. BOAS-VINDAS (após confirmar e-mail)
+//  { nome, email }
+// ═══════════════════════════════════════════════════════════
+export async function enviarEmailBoasVindas({ nome, email }) {
+  return enviar({
+    to:      email,
+    subject: 'Noir & Or · Bem-vindo ao Atelier',
+    tag:     'boas-vindas',
+    html: templateBase({
+      kanji:    '歓',
+      titulo:   `É um prazer,<br/><em>${primeiroNome(nome)}</em>`,
+      subtitulo:'Sua conta está ativa',
+      corpo: `
+        <p style="${P}">Sua conta foi confirmada com sucesso. A partir de agora você faz parte de um círculo seleto de apreciadores.</p>
+        <p style="${P}">Explore a coleção e descubra peças que definem um novo padrão de excelência.</p>
+      `,
+      cta:   { label: 'Explorar a coleção', url: `${SITE}/loja` },
+      feats: [
+        'Edições limitadas antes do lançamento público',
+        'Frete VIP gratuito em todos os pedidos',
+        'Atendimento exclusivo para membros',
+        'Programa de fidelidade com benefícios crescentes',
+      ],
+      rodape: 'Dúvidas? Fale com nosso Concierge respondendo este e-mail.',
+    }),
+  })
+}
+
+// ═══════════════════════════════════════════════════════════
+//  3. CONFIRMAÇÃO DE COMPRA
+//  { nome, email, pedido: { numero, data, itens, subtotal,
+//    total, endereco, formaPagamento } }
 // ═══════════════════════════════════════════════════════════
 export async function enviarConfirmacaoCompra({ nome, email, pedido }) {
-  const primeiroNome = (nome || 'Cliente').split(' ')[0]
-
   const itensHtml = (pedido.itens || []).map(item => `
     <tr style="border-bottom:0.5px solid ${HAIR}">
-      <td style="${TD_IMG}">
+      <td style="padding:12px 10px 12px 14px;vertical-align:middle;width:72px">
         ${item.imagem
           ? `<img src="${item.imagem}" width="56" height="56" alt="${item.nome}" style="display:block;object-fit:cover;border:0.5px solid ${HAIR}"/>`
-          : `<div style="width:56px;height:56px;background:${GOLD_03};border:0.5px solid ${HAIR};display:flex;align-items:center;justify-content:center;color:${GOLD};font-size:18px;font-family:serif">◆</div>`
+          : `<div style="width:56px;height:56px;background:${GOLD_03};border:0.5px solid ${HAIR};text-align:center;line-height:56px;color:${GOLD};font-size:18px;font-family:serif">◆</div>`
         }
       </td>
-      <td style="${TD_NFO}">
+      <td style="padding:12px 10px;vertical-align:middle">
         <p style="margin:0 0 3px;font-size:12px;letter-spacing:.04em;color:${SILK};font-family:'Helvetica Neue',sans-serif">${item.nome}</p>
-        <p style="margin:0;font-size:10px;letter-spacing:.1em;color:${SILK3};font-family:'Helvetica Neue',sans-serif">${item.categoria || ''} · Qtd: ${item.qty || 1}</p>
+        <p style="margin:0;font-size:10px;letter-spacing:.1em;color:${SILK3};font-family:'Helvetica Neue',sans-serif">
+          ${item.categoria || ''}${item.categoria && item.qty ? ' · ' : ''}${item.qty || item.quantidade ? `Qtd: ${item.qty || item.quantidade}` : ''}
+        </p>
       </td>
-      <td style="${TD_PRC}">R$ ${fmt((item.preco || 0) * (item.qty || 1))}</td>
+      <td style="padding:12px 14px;vertical-align:middle;text-align:right;font-family:monospace;font-size:12px;color:${GOLD};white-space:nowrap">
+        R$ ${fmt((item.preco || 0) * (item.qty || item.quantidade || 1))}
+      </td>
     </tr>
   `).join('')
 
-  const dataFormatada = new Date(pedido.data || Date.now())
-    .toLocaleDateString('pt-BR', { day:'2-digit', month:'long', year:'numeric' })
+  const enderecoHtml = pedido.endereco ? `
+    <div style="border:0.5px solid ${HAIR};padding:16px 20px;margin:0 0 14px;background:${GOLD_03}">
+      <p style="margin:0 0 8px;font-size:7px;letter-spacing:.5em;text-transform:uppercase;color:${GOLD};font-family:'Helvetica Neue',sans-serif">ENDEREÇO DE ENTREGA</p>
+      <p style="margin:0;font-size:12px;color:${SILK2};line-height:1.75;font-family:'Helvetica Neue',sans-serif">
+        ${pedido.endereco.endereco || pedido.endereco.rua || ''}, ${pedido.endereco.numero || ''}
+        ${pedido.endereco.complemento ? ', ' + pedido.endereco.complemento : ''}<br/>
+        ${pedido.endereco.bairro || ''} · ${pedido.endereco.cidade || ''}/${pedido.endereco.estado || ''}<br/>
+        CEP ${pedido.endereco.cep || ''}
+      </p>
+    </div>` : ''
 
   return enviar({
     to:      email,
@@ -269,12 +294,11 @@ export async function enviarConfirmacaoCompra({ nome, email, pedido }) {
     tag:     'confirmacao-compra',
     html: templateBase({
       kanji:    '御',
-      titulo:   `Pedido confirmado,<br/><em>${primeiroNome}</em>`,
-      subtitulo:`#${pedido.numero} · ${dataFormatada}`,
+      titulo:   `Pedido confirmado,<br/><em>${primeiroNome(nome)}</em>`,
+      subtitulo:`#${pedido.numero} · ${dataFormatada(pedido.data)}`,
       corpo: `
         <p style="${P}">Seu pedido foi recebido e está sendo preparado com o cuidado que sua coleção merece. Você receberá uma nova notificação assim que for despachado.</p>
 
-        <!-- Tabela de itens -->
         <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin:22px 0;border:0.5px solid ${HAIR}">
           <thead>
             <tr style="background:${GOLD_03};border-bottom:0.5px solid ${HAIR}">
@@ -284,10 +308,11 @@ export async function enviarConfirmacaoCompra({ nome, email, pedido }) {
           </thead>
           <tbody>${itensHtml}</tbody>
           <tfoot>
+            ${pedido.subtotal && pedido.subtotal !== pedido.total ? `
             <tr>
               <td colspan="2" style="padding:11px 14px;font-size:9px;letter-spacing:.3em;text-transform:uppercase;color:${SILK3};font-family:'Helvetica Neue',sans-serif">SUBTOTAL</td>
-              <td style="padding:11px 14px;text-align:right;font-size:12px;font-family:monospace;color:${SILK2}">R$ ${fmt(pedido.subtotal || pedido.total)}</td>
-            </tr>
+              <td style="padding:11px 14px;text-align:right;font-size:12px;font-family:monospace;color:${SILK2}">R$ ${fmt(pedido.subtotal)}</td>
+            </tr>` : ''}
             <tr>
               <td colspan="2" style="padding:4px 14px;font-size:9px;letter-spacing:.3em;text-transform:uppercase;color:${GOLD};opacity:.75;font-family:'Helvetica Neue',sans-serif">ENVIO VIP</td>
               <td style="padding:4px 14px;text-align:right;font-size:11px;color:${GOLD};font-family:monospace">Grátis</td>
@@ -299,20 +324,10 @@ export async function enviarConfirmacaoCompra({ nome, email, pedido }) {
           </tfoot>
         </table>
 
-        <!-- Endereço -->
-        ${pedido.endereco ? `
-        <div style="border:0.5px solid ${HAIR};padding:16px 20px;margin:0 0 14px;background:${GOLD_03}">
-          <p style="margin:0 0 8px;font-size:7px;letter-spacing:.5em;text-transform:uppercase;color:${GOLD};font-family:'Helvetica Neue',sans-serif">ENDEREÇO DE ENTREGA</p>
-          <p style="margin:0;font-size:12px;color:${SILK2};line-height:1.75;font-family:'Helvetica Neue',sans-serif">
-            ${pedido.endereco.endereco || ''}, ${pedido.endereco.numero || ''}${pedido.endereco.complemento ? ', ' + pedido.endereco.complemento : ''}<br/>
-            ${pedido.endereco.bairro || ''} · ${pedido.endereco.cidade || ''}/${pedido.endereco.estado || ''}<br/>
-            CEP ${pedido.endereco.cep || ''}
-          </p>
-        </div>` : ''}
+        ${enderecoHtml}
 
-        <!-- Forma de pagamento -->
-        <div style="border:0.5px solid ${HAIR};padding:14px 20px;display:flex;align-items:center;gap:14px;background:${GOLD_03}">
-          <p style="margin:0;font-size:7px;letter-spacing:.5em;text-transform:uppercase;color:${GOLD};white-space:nowrap;font-family:'Helvetica Neue',sans-serif">PAGAMENTO</p>
+        <div style="border:0.5px solid ${HAIR};padding:14px 20px;background:${GOLD_03}">
+          <p style="margin:0;font-size:7px;letter-spacing:.5em;text-transform:uppercase;color:${GOLD};font-family:'Helvetica Neue',sans-serif;margin-bottom:6px">PAGAMENTO</p>
           <p style="margin:0;font-size:12px;color:${SILK2};font-family:'Helvetica Neue',sans-serif">${pedido.formaPagamento || 'Cartão de crédito'}</p>
         </div>
       `,
@@ -323,45 +338,49 @@ export async function enviarConfirmacaoCompra({ nome, email, pedido }) {
 }
 
 // ═══════════════════════════════════════════════════════════
-//  3. PEDIDO A CAMINHO (despachado)
+//  4. PEDIDO A CAMINHO
+//  { nome, email, pedido: { numero, rastreamento: { codigo,
+//    transportadora, url }, prazoEntrega } }
 // ═══════════════════════════════════════════════════════════
 export async function enviarPedidoACaminho({ nome, email, pedido }) {
-  const primeiroNome = (nome || 'Cliente').split(' ')[0]
+  const rastreio = pedido.rastreamento
+
+  const blocoRastreio = rastreio?.codigo ? `
+    <div style="background:${GOLD_03};border:0.5px solid ${GOLD};border-left:2px solid ${GOLD};padding:22px 26px;margin:22px 0;text-align:center">
+      <p style="margin:0 0 8px;font-size:7px;letter-spacing:.6em;text-transform:uppercase;color:${GOLD};font-family:'Helvetica Neue',sans-serif">CÓDIGO DE RASTREAMENTO</p>
+      <p style="margin:0;font-size:24px;font-family:monospace;letter-spacing:.2em;color:${SILK};font-weight:700">${rastreio.codigo}</p>
+      <p style="margin:8px 0 0;font-size:10px;color:${SILK3};font-family:'Helvetica Neue',sans-serif">${rastreio.transportadora || 'Correios'}</p>
+    </div>
+    ${rastreio.url ? `
+    <div style="text-align:center;margin:0 0 24px">
+      <a href="${rastreio.url}" style="display:inline-block;padding:10px 28px;border:0.5px solid ${HAIR};font-size:9px;letter-spacing:.38em;text-transform:uppercase;color:${SILK3};text-decoration:none;font-family:'Helvetica Neue',sans-serif">
+        Rastrear na transportadora →
+      </a>
+    </div>` : ''}
+  ` : `
+    <div style="border:0.5px solid ${HAIR};padding:16px 20px;margin:22px 0;background:${GOLD_03}">
+      <p style="margin:0;font-size:12px;color:${SILK2};font-family:'Helvetica Neue',sans-serif">Seu pedido foi despachado. O código de rastreamento será disponibilizado em breve.</p>
+    </div>
+  `
+
   return enviar({
     to:      email,
     subject: `Noir & Or · Seu pedido #${pedido.numero} está a caminho`,
     tag:     'pedido-a-caminho',
     html: templateBase({
       kanji:    '送',
-      titulo:   `Está a caminho,<br/><em>${primeiroNome}</em>`,
+      titulo:   `Está a caminho,<br/><em>${primeiroNome(nome)}</em>`,
       subtitulo:`Pedido #${pedido.numero} · Despachado`,
       corpo: `
         <p style="${P}">Sua encomenda foi despachada e já está em trânsito. Acompanhe em tempo real com o código abaixo.</p>
-
-        <!-- Código de rastreamento -->
-        ${pedido.rastreamento?.codigo ? `
-        <div style="background:${GOLD_03};border:0.5px solid ${GOLD};border-left:2px solid ${GOLD};padding:22px 26px;margin:22px 0;text-align:center">
-          <p style="margin:0 0 8px;font-size:7px;letter-spacing:.6em;text-transform:uppercase;color:${GOLD};font-family:'Helvetica Neue',sans-serif">CÓDIGO DE RASTREAMENTO</p>
-          <p style="margin:0;font-size:24px;font-family:monospace;letter-spacing:.2em;color:${SILK};font-weight:700">${pedido.rastreamento.codigo}</p>
-          <p style="margin:8px 0 0;font-size:10px;color:${SILK3};font-family:'Helvetica Neue',sans-serif">${pedido.rastreamento.transportadora || 'Correios'}</p>
-        </div>
-        ${pedido.rastreamento.url ? `
-        <div style="text-align:center;margin:0 0 24px">
-          <a href="${pedido.rastreamento.url}"
-            style="display:inline-block;padding:10px 28px;border:0.5px solid ${HAIR};font-size:9px;letter-spacing:.38em;text-transform:uppercase;color:${SILK3};text-decoration:none;font-family:'Helvetica Neue',sans-serif">
-            Rastrear na transportadora →
-          </a>
-        </div>` : ''}` : ''}
-
-        <!-- Timeline -->
+        ${blocoRastreio}
         <div style="margin:22px 0">
-          ${step({ feito: true,  ativo: false, label: 'Pedido confirmado',  sub: 'Pagamento aprovado' })}
-          ${step({ feito: true,  ativo: false, label: 'Em preparação',      sub: 'Peças separadas e embaladas' })}
-          ${step({ feito: false, ativo: true,  label: 'A caminho',          sub: 'Despachado — em trânsito' })}
-          ${step({ feito: false, ativo: false, label: 'Entregue',           sub: 'Aguardando chegada' })}
+          ${step({ feito: true,  ativo: false, label: 'Pedido confirmado', sub: 'Pagamento aprovado' })}
+          ${step({ feito: true,  ativo: false, label: 'Em preparação',     sub: 'Peças separadas e embaladas' })}
+          ${step({ feito: false, ativo: true,  label: 'A caminho',         sub: 'Despachado — em trânsito' })}
+          ${step({ feito: false, ativo: false, label: 'Entregue',          sub: 'Aguardando chegada' })}
         </div>
-
-        <p style="${P}">Prazo estimado: <strong style="color:${GOLD}">${pedido.prazoEntrega || '2 a 5 dias úteis'}</strong>.</p>
+        <p style="${P}">Prazo estimado: <strong style="color:${GOLD}">${pedido.prazoEntrega || '5 a 10 dias úteis'}</strong>.</p>
       `,
       cta:    { label: 'Acompanhar pedido', url: `${SITE}/configuracoes?secao=pedidos&id=${pedido.numero}` },
       rodape: 'Problemas com a entrega? Entre em contato pelo nosso Concierge.',
@@ -370,10 +389,10 @@ export async function enviarPedidoACaminho({ nome, email, pedido }) {
 }
 
 // ═══════════════════════════════════════════════════════════
-//  4. REDEFINIÇÃO DE SENHA
+//  5. REDEFINIÇÃO DE SENHA
+//  { nome, email, tokenUrl, expiraEm? }
 // ═══════════════════════════════════════════════════════════
 export async function enviarRedefinicaoSenha({ nome, email, tokenUrl, expiraEm = '1 hora' }) {
-  const primeiroNome = (nome || 'Cliente').split(' ')[0]
   return enviar({
     to:      email,
     subject: 'Noir & Or · Redefinição de senha solicitada',
@@ -388,14 +407,58 @@ export async function enviarRedefinicaoSenha({ nome, email, tokenUrl, expiraEm =
           <p style="margin:0 0 6px;font-size:7px;letter-spacing:.55em;text-transform:uppercase;color:${GOLD};font-family:'Helvetica Neue',sans-serif">⚠ IMPORTANTE</p>
           <p style="margin:0;font-size:11px;color:${SILK2};line-height:1.75;font-family:'Helvetica Neue',sans-serif">
             Este link é válido por <strong style="color:${GOLD}">${expiraEm}</strong> e pode ser usado <strong style="color:${GOLD}">apenas uma vez</strong>.<br/>
-            Após redefinir a senha, todos os outros acessos serão encerrados automaticamente.
+            Após redefinir, todos os outros acessos serão encerrados automaticamente.
           </p>
         </div>
-        <p style="${P_SM}">Se você <strong>não</strong> solicitou a redefinição, ignore este e-mail com segurança. Sua senha permanece inalterada.</p>
+        <p style="${P_SM}">Se você <strong>não</strong> solicitou a redefinição, ignore este e-mail. Sua senha permanece inalterada.</p>
       `,
       cta:    { label: 'Redefinir minha senha', url: tokenUrl },
       alerta: true,
       rodape: 'Por segurança, nunca compartilhe este link. Nossa equipe jamais solicitará sua senha.',
+    }),
+  })
+}
+
+// ═══════════════════════════════════════════════════════════
+//  6. SUPORTE (novo ticket ou resposta)
+//  { nome, email, ticketId, assunto, mensagem, tipo? }
+//  tipo: 'novo' (padrão) | 'resposta'
+// ═══════════════════════════════════════════════════════════
+export async function enviarEmailSuporte({ nome, email, ticketId, assunto, mensagem, tipo = 'novo' }) {
+  const idCurto   = ticketId.toString().slice(-6).toUpperCase()
+  const linkTicket = `${SITE}/configuracoes?secao=suporte&ticket=${ticketId}`
+  const isNovo    = tipo === 'novo'
+
+  return enviar({
+    to:      email,
+    subject: isNovo
+      ? `Noir & Or · Ticket #${idCurto} aberto com sucesso`
+      : `Noir & Or · Nova resposta no ticket #${idCurto}`,
+    tag:     isNovo ? 'suporte-novo' : 'suporte-resposta',
+    html: templateBase({
+      kanji:    '助',
+      titulo:   isNovo
+        ? `Ticket aberto,<br/><em>${primeiroNome(nome)}</em>`
+        : `Nova resposta<br/><em>no seu ticket</em>`,
+      subtitulo: `#${idCurto} · ${assunto}`,
+      corpo: `
+        ${isNovo
+          ? `<p style="${P}">Recebemos sua solicitação de suporte. Nossa equipe responderá em até <strong style="color:${GOLD}">24 horas úteis</strong>.</p>`
+          : `<p style="${P}">Olá, <strong>${primeiroNome(nome)}</strong>. Nossa equipe adicionou uma resposta ao seu ticket.</p>`
+        }
+        <div style="border:0.5px solid ${HAIR};padding:20px 24px;margin:22px 0;background:${GOLD_03}">
+          <p style="margin:0 0 8px;font-size:7px;letter-spacing:.5em;text-transform:uppercase;color:${GOLD};font-family:'Helvetica Neue',sans-serif">
+            ${isNovo ? 'SUA MENSAGEM' : 'RESPOSTA DA EQUIPE'}
+          </p>
+          <p style="margin:0 0 10px;font-size:11px;color:${SILK3};font-family:'Helvetica Neue',sans-serif">
+            <strong style="color:${SILK2}">Assunto:</strong> ${assunto}
+          </p>
+          <p style="margin:0;font-size:13px;color:${SILK2};line-height:1.75;font-family:'Helvetica Neue',sans-serif">${mensagem}</p>
+        </div>
+        <p style="${P_SM}">Ticket: <strong style="color:${GOLD}">#${idCurto}</strong></p>
+      `,
+      cta:    { label: isNovo ? 'Acompanhar ticket' : 'Responder ticket', url: linkTicket },
+      rodape: 'Dúvidas urgentes? Responda diretamente este e-mail.',
     }),
   })
 }
