@@ -1,16 +1,16 @@
 // ═══════════════════════════════════════════════════════════
-//  NOIR & OR — TOKEN MODEL  (versão final)
-//  Mongoose · ES Modules
+//  NOIR & OR — TOKEN MODEL
+//  Gerencia tokens de confirmação e redefinição de senha
 // ═══════════════════════════════════════════════════════════
 import mongoose from 'mongoose'
 import crypto   from 'crypto'
 
 const TokenSchema = new mongoose.Schema({
   userId: {
-    type:     mongoose.Schema.Types.ObjectId,
-    ref:      'User',
+    type: mongoose.Schema.Types.ObjectId,
+    ref:  'User',
     required: true,
-    index:    true,
+    index: true,
   },
   token: {
     type:     String,
@@ -31,34 +31,35 @@ const TokenSchema = new mongoose.Schema({
     type:     Date,
     required: true,
   },
-}, { timestamps: true })
+  criadoEm: {
+    type:    Date,
+    default: Date.now,
+  },
+})
 
-// TTL — MongoDB remove documentos expirados automaticamente
+// TTL index — MongoDB remove automaticamente tokens expirados
 TokenSchema.index({ expiraEm: 1 }, { expireAfterSeconds: 0 })
 
-// ── Gerar token seguro ────────────────────────────────────
-// Apaga tokens anteriores do mesmo userId+tipo antes de criar
+// Gerar token seguro
 TokenSchema.statics.gerar = async function (userId, tipo, horasValidade = 24) {
+  // Invalidar tokens anteriores do mesmo tipo para este usuário
   await this.deleteMany({ userId, tipo })
 
-  const token    = crypto.randomBytes(48).toString('hex') // 96 chars
+  const raw   = crypto.randomBytes(48).toString('hex') // 96 chars
   const expiraEm = new Date(Date.now() + horasValidade * 60 * 60 * 1000)
 
-  const doc = await this.create({ userId, token, tipo, expiraEm })
+  const doc = await this.create({ userId, token: raw, tipo, expiraEm })
   return doc.token
 }
 
-// ── Verificar e consumir token (uso único) ────────────────
+// Verificar e consumir token
 TokenSchema.statics.verificar = async function (token, tipo) {
   const doc = await this.findOne({ token, tipo, usado: false })
+  if (!doc)                           throw new Error('Token inválido ou já utilizado.')
+  if (doc.expiraEm < new Date())      throw new Error('Token expirado. Solicite um novo.')
 
-  if (!doc)                      throw new Error('Token inválido ou já utilizado.')
-  if (doc.expiraEm < new Date()) throw new Error('Token expirado. Solicite um novo.')
-
-  // Marca como usado em vez de deletar — mantém histórico auditável
   doc.usado = true
   await doc.save()
-
   return doc.userId
 }
 

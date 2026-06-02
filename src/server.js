@@ -29,7 +29,6 @@ import freteRoutes from './routes/frete.js'
 import cupomRoutes from './routes/cupom.js'
 
 const app = express()
-app.set('trust proxy', 1)
 await conectar()
 
 // Segurança
@@ -60,11 +59,7 @@ app.use('/api/auth/register', limiterAuth)
 
 // CORS
 app.use(cors({
-  origin: [
-    'http://localhost:5173',
-    'https://curious-semolina-8a50c0.netlify.app',
-    'https://tecnologia-xi.vercel.app',
-  ],
+  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
   credentials: true,
 }))
 

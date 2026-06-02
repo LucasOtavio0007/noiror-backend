@@ -42,19 +42,5 @@ router.get('/', protect, adminOnly, async (req, res) => {
     res.status(500).json({ msg: 'Erro interno.' })
   }
 })
-// POST /api/reembolsos — solicitar reembolso
-router.post('/', protect, async (req, res) => {
-  try {
-    const { pedidoId, motivo } = req.body
-    const pedido = await Pedido.findOne({ _id: pedidoId, cliente: req.user._id })
-    if (!pedido) return res.status(404).json({ msg: 'Pedido não encontrado.' })
-    pedido.solicitacaoCancelamento = { solicitado: true, motivo, data: new Date() }
-    await pedido.save()
-    res.json({ ok: true, msg: 'Solicitação de reembolso enviada.' })
-  } catch (err) {
-    console.error('Erro ao solicitar reembolso:', err)
-    res.status(500).json({ msg: 'Erro interno.' })
-  }
-})
 
 export default router
