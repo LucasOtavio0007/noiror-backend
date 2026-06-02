@@ -5,7 +5,12 @@
 // ═══════════════════════════════════════════════════════════
 import { Resend } from 'resend'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
+let resend
+
+function getResend() {
+  if (!resend) resend = new Resend(process.env.RESEND_API_KEY)
+  return resend
+}
 
 const FROM   = `Noir & Or <noreply@${process.env.EMAIL_DOMAIN || 'noiror.com.br'}>`
 const REPLY  = `contato@${process.env.EMAIL_DOMAIN || 'noiror.com.br'}`
@@ -36,7 +41,7 @@ const primeiroNome = (nome) => (nome || 'Cliente').split(' ')[0]
 // ── Utilitário de envio ───────────────────────────────────
 async function enviar({ to, subject, html, tag }) {
   try {
-    const { data, error } = await resend.emails.send({
+    const { data, error } = await getResend().emails.send({
       from:     FROM,
       reply_to: REPLY,
       to:       Array.isArray(to) ? to : [to],
