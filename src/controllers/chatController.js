@@ -1,9 +1,12 @@
 import Groq from 'groq-sdk'
 import Produto from '../models/Produto.js'
 
-const groq = new Groq({
-  apiKey: process.env.GROQ_API_KEY,
-})
+let groq
+
+function getGroq() {
+  if (!groq) groq = new Groq({ apiKey: process.env.GROQ_API_KEY })
+  return groq
+}
 
 export const enviarMensagemIA = async (req, res) => {
   try {
@@ -86,7 +89,7 @@ INSTRUÇÕES:
       { role: 'user', content: mensagem.trim() },
     ]
 
-    const resposta = await groq.chat.completions.create({
+   const resposta = await getGroq().chat.completions.create({
       model: 'llama-3.1-8b-instant',
       max_tokens: 600,
       messages,
