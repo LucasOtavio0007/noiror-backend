@@ -127,3 +127,19 @@ export const deleteUser = async (req, res) => {
     res.status(500).json({ ok: false, msg: err.message })
   }
 }
+
+export const getLog = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id).select('refreshTokens createdAt ultimoAcesso')
+    
+    const log = (user.refreshTokens || []).map((t, i) => ({
+      id: t._id,
+      acao: i === (user.refreshTokens.length - 1) ? 'Login atual' : 'Login anterior',
+      data: t.criadoEm,
+    }))
+
+    res.json({ ok: true, log })
+  } catch (err) {
+    res.status(500).json({ ok: false, msg: err.message })
+  }
+}

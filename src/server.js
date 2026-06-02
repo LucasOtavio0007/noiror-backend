@@ -59,7 +59,18 @@ app.use('/api/auth/register', limiterAuth)
 
 // CORS
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+  origin: (origin, callback) => {
+    const allowed = [
+      'http://localhost:5173',
+      'http://localhost:3000',
+      'https://tecnologia-xi.vercel.app',
+    ]
+    if (!origin || allowed.includes(origin)) {
+      callback(null, true)
+    } else {
+      callback(new Error(`CORS bloqueado: ${origin}`))
+    }
+  },
   credentials: true,
 }))
 
