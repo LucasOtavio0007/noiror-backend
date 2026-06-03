@@ -192,7 +192,7 @@ export const atualizarStatusPedido = async (req, res) => {
       prazoEntrega,
     } = req.body
 
-    const permitidos = ['em-preparo', 'despachado', 'entregue', 'rejeitado', 'cancelado']
+    const permitidos = ['pendente', 'em-preparo', 'despachado', 'entregue', 'rejeitado', 'cancelado']
     if (!permitidos.includes(status)) {
       return res.status(400).json({
         erro: `Status inválido. Permitidos: ${permitidos.join(', ')}`,
